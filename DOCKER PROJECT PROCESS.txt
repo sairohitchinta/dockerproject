@@ -1,0 +1,112 @@
+DOCKER PROJECT PROCESS:
+---------------------------------------
+
+1) Create 3 EC2 instance and install docker in it 
+
+		make 1 as master and other 2 as workers
+		in master perform below:
+		-----------------------------------
+		sudo -i
+		yum install docker -y
+		systemctl start docker
+		docker swarm init
+		copy & paste the token in both the workers
+		
+		in workers nodes:
+		--------------------------
+		sudo -i
+		yum install docker -y
+		systemctl start docker
+		paste the token here
+
+
+2) upload the Dockerfile, compose.yml files in the GitHub repo
+
+		https://github.com/sairohitchinta/dockerproject.git
+
+
+3) Now change the permissions and restart the docker service in master node
+
+		chmod 777 /var/run/docker.sock
+		systemctl daemon-reload
+		systemctl restart docker
+
+4) Install Jenkins in master and configure it
+		
+		using script which is available in my GitHub : https://github.com/sairohitchinta/mysetups.git
+
+
+5) Create a pipeline project which takes parameters
+
+		ADD PARAMETER TO IT BY RUNNING THE BUILD BY CHANING THE CONTENT IN INDEX.HTML
+
+		
+
+	
+	pipeline{
+	agent any
+	
+	stages{
+		stage('git checkout'){
+			steps{
+				git branch: 'main', url: 'https://github.com/sairohitchinta/dockerproject.git'
+			}
+		}
+		stage('build'){
+			steps{
+				sh 'docker build -t $img_name . '
+			}
+		}
+		stage('tag & push'){
+			steps{
+				sh '''
+				docker tag $img_name $repo
+				docker login -u sairohitchinta -p $password
+				docker push $repo
+				'''
+			}
+		}
+		stage('deploy'){
+			input{
+				message ' do you wish to continue?'
+				ok 'yes'	
+			}
+			steps{
+				sh ' docker stack deploy -c compose.yml paytm'
+			}
+		}
+	}
+}
+
+
+6) HERE WE HAVE FOUR SERVICES(MOVIES, TRAINS, RECHARGE, DTH) RUN FOR 4 TIME WITHOUT DEPLOY STAGE
+
+		AFTER UPLOADING COMPOSE.YML FILE , RUN FOR THE 5 TIME INCLUDING DEPLOY STAGE
+
+
+7) COPY THE PUBLIC IP OF EVERY EC2 INSTANCE AND PASTE IN THE BROWSER LIKE BELOW
+
+		
+		MOVIES:
+			MASTER_PUBLIC_IP:81
+			WORKER1_PUBLIC_IP:81
+			WORKER2_PUBLIC_IP:81
+
+		TRAINS:
+			MASTER_PUBLIC_IP:82
+			WORKER1_PUBLIC_IP:82
+			WORKER2_PUBLIC_IP:82
+
+		RECHARGE:
+			MASTER_PUBLIC_IP:83
+			WORKER1_PUBLIC_IP:83
+			WORKER2_PUBLIC_IP:83
+
+		DTH:
+			MASTER_PUBLIC_IP:84
+			WORKER1_PUBLIC_IP:84
+			WORKER2_PUBLIC_IP:84
+
+
+		
+

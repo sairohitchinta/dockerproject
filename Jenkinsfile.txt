@@ -1,0 +1,34 @@
+pipeline{
+	agent any
+	
+	stages{
+		stage('git checkout'){
+			steps{
+				git 'url'
+			}
+		}
+		stage('build'){
+			steps{
+				sh 'docker build -t $img_name . '
+			}
+		}
+		stage('tag & push'){
+			steps{
+				sh '''
+				docker tag $img_name $repo
+				docker login -u sairohitchinta -p $password
+				docker push $repo
+				'''
+			}
+		}
+		stage('deploy'){
+			input{
+				message ' do you wish to continue?'
+				ok 'yes'	
+			}
+			steps{
+				sh ' docker stack deploy -c compose.yml paytm'
+			}
+		}
+	}
+}
